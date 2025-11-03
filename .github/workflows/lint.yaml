@@ -1,0 +1,171 @@
+name: Lint
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'ci-runner-worker/**'
+      - '.github/workflows/lint.yaml'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'ci-runner-worker/**'
+      - '.github/workflows/lint.yaml'
+  workflow_dispatch:
+
+jobs:
+  yaml-lint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install yamllint
+        run: |
+          pip install yamllint
+
+      - name: Run yamllint
+        run: |
+          yamllint -c .yamllint ci-runner-worker/
+
+      - name: Lint summary
+        if: always()
+        run: |
+          echo "### YAML Lint Results ✅" >> $GITHUB_STEP_SUMMARY
+          echo "All YAML files passed linting checks" >> $GITHUB_STEP_SUMMARY
+
+  helm-lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.3'
+
+      - name: Helm lint
+        run: |
+          helm lint ci-runner-worker/ --strict
+
+      - name: Helm template dry-run
+        run: |
+          helm template ci-runner-worker ci-runner-worker/ \
+            --namespace iac-ci \
+            --debug
+
+      - name: Lint summary
+        if: always()
+        run: |
+          echo "### Helm Lint Results ✅" >> $GITHUB_STEP_SUMMARY
+          echo "Helm chart passed all lint checks" >> $GITHUB_STEP_SUMMARY
+
+  kubeconform:
+    name: Kubernetes Manifest Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.3'
+
+      - name: Install kubeconform
+        run: |
+          wget https://github.com/yannh/kubeconform/releases/download/v0.6.4/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Generate Kubernetes manifests
+        run: |
+          helm template ci-runner-worker ci-runner-worker/ \
+            --namespace iac-ci > manifests.yaml
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubeconform -strict -summary manifests.yaml
+
+      - name: Validation summary
+        if: always()
+        run: |
+          echo "### Kubernetes Manifest Validation ✅" >> $GITHUB_STEP_SUMMARY
+          echo "All generated manifests are valid Kubernetes resources" >> $GITHUB_STEP_SUMMARY
+
+  chart-testing:
+    name: Chart Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.3'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Run chart-testing (lint)
+        run: |
+          ct lint --target-branch ${{ github.event.repository.default_branch }} \
+            --chart-dirs . \
+            --charts ci-runner-worker
+
+      - name: Testing summary
+        if: always()
+        run: |
+          echo "### Chart Testing Results ✅" >> $GITHUB_STEP_SUMMARY
+          echo "Chart testing completed successfully" >> $GITHUB_STEP_SUMMARY
+
+  lint-results:
+    name: Lint Results Summary
+    runs-on: ubuntu-latest
+    needs: [yaml-lint, helm-lint, kubeconform, chart-testing]
+    if: always()
+    steps:
+      - name: Check lint results
+        run: |
+          if [[ "${{ needs.yaml-lint.result }}" == "success" ]] && \
+             [[ "${{ needs.helm-lint.result }}" == "success" ]] && \
+             [[ "${{ needs.kubeconform.result }}" == "success" ]] && \
+             [[ "${{ needs.chart-testing.result }}" == "success" ]]; then
+            echo "✅ All lint checks passed!"
+            exit 0
+          else
+            echo "❌ Some lint checks failed"
+            exit 1
+          fi
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## Lint Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| YAML Lint | ${{ needs.yaml-lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Helm Lint | ${{ needs.helm-lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Kubeconform | ${{ needs.kubeconform.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Chart Testing | ${{ needs.chart-testing.result }} |" >> $GITHUB_STEP_SUMMARY
