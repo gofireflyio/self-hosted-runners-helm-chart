@@ -1,0 +1,5 @@
+apiVersion: v2
+name: ci-runner-worker
+description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+type: application
+version: 1.0.0
