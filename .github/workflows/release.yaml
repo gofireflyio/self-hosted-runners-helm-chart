@@ -27,6 +27,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - name: Generate GitHub App token
         id: app_token
