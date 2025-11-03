@@ -28,6 +28,19 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App token
+        id: app_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GOFIREFLYIO_APP_ID}}
+          private-key: ${{ secrets.GOFIREFLYIO_PEM_FILE}}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -115,11 +128,11 @@ jobs:
           prerelease: false
           files: packaged-charts/*.tgz
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
 
       - name: Publish to GHCR
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+          echo "${{ steps.app_token.outputs.token }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
           CHART_FILE=$(ls packaged-charts/*.tgz)
           helm push ${CHART_FILE} oci://ghcr.io/${{ github.repository_owner }}/charts
           helm registry logout ghcr.io
