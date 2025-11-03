@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ci-runner-worker.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "ci-runner-worker.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.keda.enabled }}
+  replicas: {{ .Values.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ci-runner-worker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "ci-runner-worker.configmapChecksum" . | nindent 8 }}
+      labels:
+        {{- include "ci-runner-worker.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "ci-runner-worker.serviceAccountName" . }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- toYaml .Values.volumes | nindent 8 }}
+      containers:
+        # Main container
+        - name: {{ .Values.appName }}
+          image: "{{ .Values.repository.registry }}{{ .Values.repository.name }}:{{ .Values.repository.tag }}"
+          imagePullPolicy: {{ .Values.repository.pullPolicy }}
+          {{- if .Values.repository.command }}
+          command:
+            {{- toYaml .Values.repository.command | nindent 12 }}
+          {{- end }}
+          {{- if .Values.repository.args }}
+          args:
+            {{- toYaml .Values.repository.args | nindent 12 }}
+          {{- end }}
+          envFrom:
+            {{- range .Values.configMaps }}
+            - configMapRef:
+                name: {{ .name }}
+            {{- end }}
+            {{- if .Values.secretConfigPointer.enabled }}
+            - secretRef:
+                name: {{ .Values.secretConfigPointer.secret }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+            {{- if .Values.metricsService.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.metricsService.targetPort }}
+              protocol: TCP
+            {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe.httpGet | nindent 12 }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe.httpGet | nindent 12 }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.containers.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            {{- toYaml .Values.volumeMounts | nindent 12 }}
+        {{- if .Values.customImage.enabled }}
+        # Docker-in-Docker sidecar
+        - name: {{ .Values.customImage.name }}
+          image: "{{ .Values.customImage.repository }}:{{ .Values.customImage.tag }}"
+          imagePullPolicy: {{ .Values.customImage.pullPolicy }}
+          {{- if .Values.customImage.command }}
+          command:
+            {{- toYaml .Values.customImage.command | nindent 12 }}
+          {{- end }}
+          env:
+            {{- toYaml .Values.customImage.env | nindent 12 }}
+          resources:
+            {{- toYaml .Values.customImage.resources | nindent 12 }}
+          {{- with .Values.customImage.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run
+            - name: workspaces
+              mountPath: /workspace-data
+        {{- end }}

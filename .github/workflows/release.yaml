@@ -1,0 +1,285 @@
+name: CI-WORKER-RUNNER Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ci-runner-worker/**'
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  determine-version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.semver.outputs.new_version }}
+      previous_version: ${{ steps.semver.outputs.previous_version }}
+      version_bump: ${{ steps.semver.outputs.version_bump }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous version
+        id: get_previous
+        run: |
+          PREVIOUS_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "previous_version=${PREVIOUS_VERSION}" >> $GITHUB_OUTPUT
+          echo "Previous version: ${PREVIOUS_VERSION}"
+
+      - name: Determine version bump
+        id: determine_bump
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            BUMP_TYPE="${{ github.event.inputs.version_bump }}"
+          else
+            # Analyze commit messages for conventional commits
+            COMMITS=$(git log ${{ steps.get_previous.outputs.previous_version }}..HEAD --pretty=format:"%s")
+          
+            if echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?!:|^BREAKING CHANGE:|^[a-z]+(\(.+\))?!:"; then
+              BUMP_TYPE="major"
+            elif echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?:"; then
+              BUMP_TYPE="minor"
+            else
+              BUMP_TYPE="patch"
+            fi
+          fi
+          
+          echo "version_bump=${BUMP_TYPE}" >> $GITHUB_OUTPUT
+          echo "Detected bump type: ${BUMP_TYPE}"
+
+      - name: Calculate new version
+        id: semver
+        run: |
+          PREVIOUS_VERSION="${{ steps.get_previous.outputs.previous_version }}"
+          BUMP_TYPE="${{ steps.determine_bump.outputs.version_bump }}"
+          
+          # Remove 'v' prefix if present
+          VERSION=${PREVIOUS_VERSION#v}
+          
+          # Split version into major, minor, patch
+          IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
+          MAJOR=${VERSION_PARTS[0]:-0}
+          MINOR=${VERSION_PARTS[1]:-0}
+          PATCH=${VERSION_PARTS[2]:-0}
+          
+          # Bump version
+          case $BUMP_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "previous_version=${PREVIOUS_VERSION}" >> $GITHUB_OUTPUT
+          echo "version_bump=${BUMP_TYPE}" >> $GITHUB_OUTPUT
+          
+          echo "New version: ${NEW_VERSION}"
+
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.3'
+
+      - name: Helm lint
+        run: |
+          helm lint ci-runner-worker/ --strict
+
+      - name: Helm template test
+        run: |
+          helm template ci-runner-worker ci-runner-worker/ --namespace iac-ci
+
+  update-chart-version:
+    name: Update Chart Version
+    runs-on: ubuntu-latest
+    needs: [determine-version, lint-and-test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Chart.yaml
+        run: |
+          NEW_VERSION="${{ needs.determine-version.outputs.new_version }}"
+          VERSION_NO_V=${NEW_VERSION#v}
+          
+          # Update version in Chart.yaml
+          sed -i "s/^version:.*/version: ${VERSION_NO_V}/" ci-runner-worker/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${VERSION_NO_V}\"/" ci-runner-worker/Chart.yaml
+          
+          echo "Updated Chart.yaml to version ${VERSION_NO_V}"
+
+      - name: Commit version update
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git add ci-runner-worker/Chart.yaml
+          git commit -m "chore: bump chart version to ${{ needs.determine-version.outputs.new_version }}" || echo "No changes to commit"
+          git push
+
+  package-chart:
+    name: Package Helm Chart
+    runs-on: ubuntu-latest
+    needs: [determine-version, update-chart-version]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.3'
+
+      - name: Package Helm chart
+        run: |
+          helm package ci-runner-worker/ --destination .
+
+      - name: Upload chart package
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart
+          path: "*.tgz"
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [determine-version, package-chart]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Download chart package
+        uses: actions/download-artifact@v4
+        with:
+          name: helm-chart
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_VERSION="${{ needs.determine-version.outputs.previous_version }}"
+          NEW_VERSION="${{ needs.determine-version.outputs.new_version }}"
+          
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "## ${NEW_VERSION}" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          
+          # Get commits since last tag
+          if [[ "$PREVIOUS_VERSION" != "v0.0.0" ]]; then
+            git log ${PREVIOUS_VERSION}..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          else
+            git log --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          fi
+          
+          cat CHANGELOG.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.determine-version.outputs.new_version }}
+          name: Release ${{ needs.determine-version.outputs.new_version }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+          files: |
+            *.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release summary
+        run: |
+          echo "## Release Created 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.determine-version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Previous Version:** ${{ needs.determine-version.outputs.previous_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bump Type:** ${{ needs.determine-version.outputs.version_bump }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Notes" >> $GITHUB_STEP_SUMMARY
+          cat CHANGELOG.md >> $GITHUB_STEP_SUMMARY
+
+  publish-to-registry:
+    name: Publish to OCI Registry
+    runs-on: ubuntu-latest
+    needs: [determine-version, package-chart]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.3'
+
+      - name: Download chart package
+        uses: actions/download-artifact@v4
+        with:
+          name: helm-chart
+
+      - name: Login to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push chart to GHCR
+        run: |
+          CHART_FILE=$(ls *.tgz)
+          helm push ${CHART_FILE} oci://ghcr.io/${{ github.repository_owner }}/charts
+
+      - name: Logout from registry
+        if: always()
+        run: |
+          helm registry logout ghcr.io
+
+      - name: Publish summary
+        run: |
+          echo "## Chart Published 📦" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** ghcr.io/${{ github.repository_owner }}/charts" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.determine-version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Install Command" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "helm install ci-runner-worker oci://ghcr.io/${{ github.repository_owner }}/charts/ci-runner-worker --version ${{ needs.determine-version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
