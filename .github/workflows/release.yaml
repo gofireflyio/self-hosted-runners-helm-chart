@@ -67,7 +67,7 @@ jobs:
             helm package "$d" -u -d "$WORKSPACE/packaged-charts"
           
             # Get the name of the packaged file
-            CHART_NAME=$(ci-runner-workername "$d")
+            CHART_NAME=$(basename "$d")
             CHART_VERSION=$(grep 'version:' "${d}Chart.yaml" | awk '{print $2}')
             CHART_FILENAME="${CHART_NAME}-${CHART_VERSION}.tgz"
           
