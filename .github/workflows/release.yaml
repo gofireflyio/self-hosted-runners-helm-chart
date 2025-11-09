@@ -85,7 +85,7 @@ jobs:
           mkdir -p packaged-charts
           
           # Get a list of the last X version tags (excluding the current one)
-          CURRENT_TAG="ci-runner-worker-${{ steps.chart-info.outputs.base_version }}"
+          CURRENT_TAG="ci-runner-worker-${{ steps.chart-info.outputs.ci-runner-worker_version }}"
           NUM_VERSIONS="${{ github.event.inputs.include_previous_versions || '3' }}"
           
           # Check if specific versions were provided
