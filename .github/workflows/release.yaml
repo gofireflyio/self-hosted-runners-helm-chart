@@ -85,7 +85,7 @@ jobs:
           mkdir -p packaged-charts
           
           # Get a list of the last X version tags (excluding the current one)
-          CURRENT_TAG="ci-runner-worker-0.0.6"
+          CURRENT_TAG="ci-runner-worker-0.0.1"
           NUM_VERSIONS="3"
           
           # Save current branch or commit before changing refs
