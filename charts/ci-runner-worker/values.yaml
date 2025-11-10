@@ -80,10 +80,6 @@ volumeMounts:
   - name: workspaces
     mountPath: /workspace-data
 
-# Workflow configuration (optional overrides)
-workflow:
-  terraformActivityTimeout: ""  # defaults to "30m" if empty
-
 # ConfigMap configuration
 configMaps:
   - name: "ci-runner-worker"
