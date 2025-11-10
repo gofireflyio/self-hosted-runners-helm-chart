@@ -70,9 +70,9 @@ affinity: {}
 # Volumes
 volumes:
   - name: docker-socket
-    emptyDir: {}
+    emptyDir: { }
   - name: workspaces
-    emptyDir: {}
+    emptyDir: { }
 
 volumeMounts:
   - name: docker-socket
@@ -80,14 +80,22 @@ volumeMounts:
   - name: workspaces
     mountPath: /workspace-data
 
+# Workflow configuration (optional overrides)
+workflow:
+  terraformActivityTimeout: ""  # defaults to "30m" if empty
+
 # ConfigMap configuration
 configMaps:
   - name: "ci-runner-worker"
     data:
+      # Firefly configuration
+      FIREFLY_API_URL: "https://api.firefly.ai"
       # Worker configuration
-      WORKER_DEBUG: 'false'
+      WORKER_TEMPORAL_TLS: true
       WORKER_TEMPORAL_HOST_PORT: "temporal-api.firefly.ai:443"
-      WORKER_TEMPORAL_NAMESPACE: "ci-runners"
+      WORKER_ACCOUNT_ID: ""
+      WORKER_POOL_ID: ""
+      WORKER_DEBUG: 0
       # Workflow configuration
       WORKFLOW_WORKSPACE_BASE_PATH: "/workspace-data"
       WORKFLOW_TERRAFORM_ACTIVITY_TIMEOUT: "30m"
@@ -100,8 +108,6 @@ configMaps:
       # Docker configuration
       DOCKER_HOST: "unix:///var/run/docker.sock"
       DOCKER_API_VERSION: ""
-      # Orchestrator configuration
-      ORCHESTRATOR_BASE_URL: "http://orchestrator-api-service.iac-ci:3001/"
       # HTTP client configuration
       HTTP_RETRY_COUNT: "3"
       HTTP_RETRY_WAIT_TIME: "10s"
@@ -113,10 +119,8 @@ configMaps:
       GITHUB_MAX_RETRY_ATTEMPTS: "3"
       GITHUB_RETRY_TIMEOUT_BUFFER: "3s"
       GITHUB_RETRY_TIMEOUT: "60s"
-      # VCS Server configuration
-      VCS_SERVER_BASE_URL: "http://iac-code-vcs-server-service.iac-code:3001"
       # CI Server configuration
-      CI_AGENT_CI_SERVER_URL: "http://iac-ci-server-service.iac-ci:3001"
+      CI_AGENT_CI_SERVER_URL: "http://127.0.0.1:8080"
       CI_AGENT_IMAGE: "public.ecr.aws/firefly/fireflyci"
       CI_AGENT_TAG: "v0.5.147"
       # Metrics
@@ -127,9 +131,8 @@ configMaps:
 secret:
   name: ci-runner-worker-secrets
   create: true
-  data: {}
-    # Add your secret key-value pairs here
-  # EXAMPLE_SECRET_KEY: base64encodedvalue
+  data:
+    FIREFLY_JWT_TOKEN: ""
 
 secretConfigPointer:
   enabled: true
