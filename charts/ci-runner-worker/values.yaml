@@ -70,9 +70,9 @@ affinity: {}
 # Volumes
 volumes:
   - name: docker-socket
-    emptyDir: { }
+    emptyDir: {}
   - name: workspaces
-    emptyDir: { }
+    emptyDir: {}
 
 volumeMounts:
   - name: docker-socket
