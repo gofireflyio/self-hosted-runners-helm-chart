@@ -1,6 +1,5 @@
 appName: ci-runner-worker
 env: prod
-namespace: iac-ci
 
 # Deployment configuration
 replicas: 3

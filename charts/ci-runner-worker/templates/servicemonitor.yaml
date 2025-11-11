@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "ci-runner-worker.fullname" . }}
-  namespace: {{ .Values.serviceMonitor.namespace | default .Values.namespace }}
+  namespace: {{ .Values.serviceMonitor.namespace | default .Release.Namespace }}
   labels:
     {{- include "ci-runner-worker.labels" . | nindent 4 }}
     {{- with .Values.serviceMonitor.labels }}
@@ -15,7 +15,7 @@ spec:
       {{- include "ci-runner-worker.selectorLabels" . | nindent 6 }}
   namespaceSelector:
     matchNames:
-      - {{ .Values.namespace }}
+      - {{ .Release.Namespace }}
   endpoints:
     - port: metrics
       path: {{ .Values.serviceMonitor.path }}
