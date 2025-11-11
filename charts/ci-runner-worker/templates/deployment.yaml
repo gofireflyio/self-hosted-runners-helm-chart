@@ -48,10 +48,8 @@ spec:
             {{- toYaml .Values.repository.args | nindent 12 }}
           {{- end }}
           envFrom:
-            {{- range .Values.configMaps }}
             - configMapRef:
-                name: {{ .name }}
-            {{- end }}
+                name: {{ .Values.configMap.name }}
             {{- if .Values.secretConfigPointer.enabled }}
             - secretRef:
                 name: {{ .Values.secretConfigPointer.secret }}
