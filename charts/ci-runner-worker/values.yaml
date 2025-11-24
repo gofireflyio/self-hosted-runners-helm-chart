@@ -84,7 +84,7 @@ configMap:
   name: "ci-runner-worker"
   data:
     # Firefly configuration
-    FIREFLY_API_URL: "https://api.firefly.ai"
+    FIREFLY_API_URL: "https://api.firefly.ai/v2"
     # Worker configuration
     WORKER_TEMPORAL_TLS: true
     WORKER_TEMPORAL_HOST_PORT: "temporal-api.firefly.ai:443"
@@ -96,13 +96,9 @@ configMap:
     WORKFLOW_TERRAFORM_ACTIVITY_TIMEOUT: "30m"
     # Terraform configuration
     TERRAFORM_IMAGE: "hashicorp/terraform"
-    TERRAFORM_TAG: "latest"
     TERRAFORM_ACTIVITY_TIMEOUT: "30m"
     # OpenTofu configuration
     OPENTOFU_IMAGE: "ghcr.io/opentofu/opentofu"
-    # Docker configuration
-    DOCKER_HOST: "unix:///var/run/docker.sock"
-    DOCKER_API_VERSION: ""
     # HTTP client configuration
     HTTP_RETRY_COUNT: "3"
     HTTP_RETRY_WAIT_TIME: "10s"
@@ -115,9 +111,8 @@ configMap:
     GITHUB_RETRY_TIMEOUT_BUFFER: "3s"
     GITHUB_RETRY_TIMEOUT: "60s"
     # CI Server configuration
-    CI_AGENT_CI_SERVER_URL: "http://127.0.0.1:8080"
     CI_AGENT_IMAGE: "public.ecr.aws/firefly/fireflyci"
-    CI_AGENT_TAG: "v0.5.147"
+    CI_AGENT_TAG: "v0.5.153"
     # Metrics
     ENABLE_METRICS: 'true'
     METRICS_PORT: '3002'
