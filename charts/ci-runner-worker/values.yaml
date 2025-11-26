@@ -9,7 +9,7 @@ autoReloadConfig: true
 # Main container image
 repository:
   name: ci-runner-worker
-  registry: "public.ecr.aws/firefly/ci-runner-worker"
+  registry: "public.ecr.aws/firefly/"
   tag: latest
   pullPolicy: IfNotPresent
   command: []
