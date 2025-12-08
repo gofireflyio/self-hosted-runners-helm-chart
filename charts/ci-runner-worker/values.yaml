@@ -143,13 +143,6 @@ service:
   targetPort: 3001
   annotations: {}
 
-# Metrics Service
-metricsService:
-  enabled: true
-  servicePort: 3002
-  targetPort: 3002
-  annotations: {}
-
 # Probes
 livenessProbe:
   enabled: true
@@ -172,23 +165,3 @@ readinessProbe:
   timeoutSeconds: 3
   successThreshold: 1
   failureThreshold: 3
-
-# ServiceMonitor for Prometheus
-serviceMonitor:
-  enabled: true
-  namespace: ""
-  interval: 30s
-  scrapeTimeout: 10s
-  labels: {}
-  honorLabels: true
-  path: /metrics
-  scheme: http
-
-# KEDA autoscaling
-keda:
-  enabled: false
-  minReplicaCount: 1
-  maxReplicaCount: 10
-  pollingInterval: 30
-  cooldownPeriod: 300
-  triggers: []
