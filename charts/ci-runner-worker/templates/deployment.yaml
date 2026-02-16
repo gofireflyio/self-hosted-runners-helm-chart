@@ -107,8 +107,5 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: docker-socket
-              mountPath: /var/run
-            - name: workspaces
-              mountPath: /workspace-data
+            {{- toYaml .Values.volumeMounts | nindent 12 }}
         {{- end }}
