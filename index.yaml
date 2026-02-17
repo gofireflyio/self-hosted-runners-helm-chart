@@ -1,0 +1,103 @@
+apiVersion: v1
+entries:
+  ci-runner-worker:
+  - apiVersion: v2
+    created: "2026-02-17T09:04:21.146051214Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: f6c2645715ee8fa1303f6d18a367543416bdcf822b62a7cbbbc09c7a43e96d77
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.10.tgz
+    version: 0.0.10
+  - apiVersion: v2
+    created: "2026-02-17T09:04:21.148146106Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: 6494991cfc9695b2555d675997f727271f7a5aac064ffe1676335136be8ce4e5
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.9.tgz
+    version: 0.0.9
+  - apiVersion: v2
+    created: "2026-02-17T09:04:21.147522262Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: b6a66bea317ced44998618ee104c1725464cdf2f550f65af4c59755102dca57b
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.8.tgz
+    version: 0.0.8
+  - apiVersion: v2
+    created: "2026-02-17T09:04:21.146849316Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: 86b06fe5586aea143257e9ad37b1e366a7f0d37d5b6637db53ae7b70b15bee8b
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.7.tgz
+    version: 0.0.7
+  - apiVersion: v2
+    created: "2026-02-12T16:35:27.439823391Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: fe90d764d20643f00f710a9c77d9495c31778e53891c36fd1bedb495a154facd
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.6.tgz
+    version: 0.0.6
+  - apiVersion: v2
+    created: "2025-12-08T09:03:33.245667845Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: dec6484df42d4d3739aa4272eab916e411a554a6d170bbecd52e99fa7df59658
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.5.tgz
+    version: 0.0.5
+  - apiVersion: v2
+    created: "2025-11-26T12:10:35.579833881Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: f3c0766e366d2e455c044574b0a922fd18479a0be751f764c7cae3316c82efe8
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.4.tgz
+    version: 0.0.4
+  - apiVersion: v2
+    created: "2025-11-26T09:54:41.84308774Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: d2bc77a919fb3202950f2a085607ed68afebd095c21602df7f0f975c1f0a16c6
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    created: "2025-11-24T09:26:44.468505669Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: 5398cc7d088535e8e2cdd38fd5a589495f40aeb92c87a868fc21f601ffc500e2
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v2
+    created: "2025-11-11T14:49:16.622154546Z"
+    description: A Helm chart for CI Runner Worker with Docker-in-Docker sidecar
+    digest: 48ed21746ba189a51c8db4be878540a38d65d3487a4379517f2ba12d47af7944
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.1.tgz
+    version: 0.0.1
+  - apiVersion: v2
+    created: "2025-05-19T09:36:13.018845738Z"
+    description: ci-runner-worker
+    digest: e624c4c096bef5c37cab3e830b8994b8e536ae44125685a1ac817098aba63037
+    name: ci-runner-worker
+    type: application
+    urls:
+    - ci-runner-worker-0.0.0.tgz
+    version: 0.0.0
+generated: "2026-02-17T09:04:21.144370393Z"
