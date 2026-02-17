@@ -38,6 +38,7 @@ customImage:
       value: ""
     - name: DOCKER_HOST
       value: unix:///var/run/docker.sock
+  volumeMounts: []
 
 # Main container configuration
 containers:
@@ -165,3 +166,11 @@ readinessProbe:
   timeoutSeconds: 3
   successThreshold: 1
   failureThreshold: 3
+
+# Metrics Service
+metricsService:
+  enabled: false
+
+# ServiceMonitor
+serviceMonitor:
+  enabled: false
