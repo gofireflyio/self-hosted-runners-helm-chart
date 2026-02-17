@@ -38,6 +38,7 @@ customImage:
       value: ""
     - name: DOCKER_HOST
       value: unix:///var/run/docker.sock
+  volumeMounts: []
 
 # Main container configuration
 containers:

@@ -107,5 +107,11 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- toYaml .Values.volumeMounts | nindent 12 }}
+            {{- if .Values.customImage.volumeMounts }}
+            {{- toYaml .Values.customImage.volumeMounts | nindent 12 }}
+            {{- end }}
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
+            - name: workspaces
+              mountPath: /workspace-data
         {{- end }}
