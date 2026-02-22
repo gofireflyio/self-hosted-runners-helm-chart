@@ -113,7 +113,7 @@ configMap:
     GITHUB_RETRY_TIMEOUT: "60s"
     # CI Server configuration
     CI_AGENT_IMAGE: "public.ecr.aws/firefly/fireflyci"
-    CI_AGENT_TAG: "v0.5.155"
+    CI_AGENT_TAG: "v0.5.167"
     # Metrics
     ENABLE_METRICS: 'true'
     METRICS_PORT: '3002'
