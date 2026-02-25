@@ -52,6 +52,12 @@ spec:
             - secretRef:
                 name: {{ .Values.secretConfigPointer.secret }}
             {{- end }}
+          env:
+            - name: WORKFLOW_REMOTE_BACKEND_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretConfigPointer.secret }}
+                  key: FIREFLY_JWT_TOKEN
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
