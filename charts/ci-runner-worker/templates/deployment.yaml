@@ -52,6 +52,9 @@ spec:
             - secretRef:
                 name: {{ .Values.secretConfigPointer.secret }}
             {{- end }}
+          env:
+            - name: WORKFLOW_REMOTE_BACKEND_EXTERNAL_HOSTNAME
+              value: {{ (urlParse (.Values.configMap.data.FIREFLY_API_URL | default "")).host | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
