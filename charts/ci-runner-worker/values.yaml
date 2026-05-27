@@ -94,7 +94,7 @@ configMap:
     WORKER_DEBUG: 0
     # Workflow configuration
     WORKFLOW_WORKSPACE_BASE_PATH: "/workspace-data"
-    WORKFLOW_TERRAFORM_ACTIVITY_TIMEOUT: "30m"
+    WORKFLOW_TERRAFORM_ACTIVITY_TIMEOUT: "90m"
     # Terraform configuration
     TERRAFORM_IMAGE: "hashicorp/terraform"
     TERRAFORM_ACTIVITY_TIMEOUT: "30m"
