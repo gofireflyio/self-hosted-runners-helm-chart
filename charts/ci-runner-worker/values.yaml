@@ -57,13 +57,11 @@ resources:
     cpu: 1000m
 
 # Node scheduling
-nodeSelector:
-  karpenter.firefly.ai/arch: arm64
+# Empty by default so pods schedule on any node. Override to pin runners to
+# specific nodes (e.g. arm64, spot, or a dedicated pool).
+nodeSelector: {}
 
-tolerations:
-  - key: karpenter.firefly.ai/arch
-    value: arm64
-    effect: NoSchedule
+tolerations: []
 
 affinity: {}
 
