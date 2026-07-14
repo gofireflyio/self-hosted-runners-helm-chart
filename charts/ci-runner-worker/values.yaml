@@ -92,10 +92,10 @@ configMap:
     WORKER_ACCOUNT_ID: ""
     WORKER_POOL_ID: ""
     WORKER_DEBUG: 0
-    # Ceiling for manual-apply child WorkflowExecutionTimeout; must exceed the
-    # platform approval timeout (default 96h) + 6h apply headroom, otherwise the
-    # approval window is silently truncated and runs end TimedOut
-    WORKER_CHILD_EXECUTION_TIMEOUT: "102h"
+    # Ceiling for manual-apply child WorkflowExecutionTimeout: platform approval
+    # window (48h) + 6h apply headroom, so the graceful approval-timeout discard
+    # always fires before the hard kill and no idle workflow outlives the window
+    WORKER_CHILD_EXECUTION_TIMEOUT: "54h"
     # Workflow configuration
     WORKFLOW_WORKSPACE_BASE_PATH: "/workspace-data"
     WORKFLOW_TERRAFORM_ACTIVITY_TIMEOUT: "90m"
