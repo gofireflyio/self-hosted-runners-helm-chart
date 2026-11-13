@@ -86,7 +86,6 @@ configMap:
     FIREFLY_API_URL: "https://api.firefly.ai/v2"
     # Worker configuration
     WORKER_TEMPORAL_TLS: true
-    WORKER_TEMPORAL_HOST_PORT: "temporal-api.firefly.ai:443"
     WORKER_ACCOUNT_ID: ""
     WORKER_POOL_ID: ""
     WORKER_DEBUG: 0
